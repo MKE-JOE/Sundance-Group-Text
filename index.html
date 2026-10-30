@@ -476,6 +476,10 @@ textarea { min-height: 130px; resize: vertical; }
       }
       h += `<div class="btnrow"><button class="btn small" data-act="copy-num">Copy number</button><button class="btn small" data-act="copy-msg">Copy message</button><button class="btn small" data-act="skip">Skip</button></div></div>
         <p class="muted small">Messages opens with the text filled in. Tap send there, then come back here for the next person.</p>`;
+      const left = r.items.filter(i => i.status === "pending").length;
+      h += `<details class="card"><summary style="font-weight:600;cursor:pointer">Send all ${left} with the One by One Send Shortcut</summary><div class="stack" style="margin-top:12px">
+        <div class="btnrow"><button class="btn primary" data-act="copy-shortcut">1. Copy texts</button><button class="btn" data-act="all-sent">${armedBtn("allsent", "2. Shortcut done, mark sent", "Tap again to confirm")}</button></div>
+        <p class="muted small" style="margin:0">After copying, open the Shortcuts app, run <strong>One by One Send</strong>, then come back and tap step 2.</p></div></details>`;
     } else {
       h += `<div class="card stack"><h2>All done</h2><p class="muted" style="margin:0">${sent} of ${r.items.length} people got your text.</p><button class="btn primary" data-act="finish">Back to groups</button></div>`;
     }
