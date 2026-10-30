@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1F55D0">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>One by One Texts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="One by One">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: single-column phone app, sticky top bar, bottom tab bar; one view at a time */
+:root {
+  --bg: #F3F5F8;
+  --surface: #FFFFFF;
+  --ink: #142033;
+  --muted: #5B6779;
+  --line: #DCE1E9;
+  --accent: #1F55D0;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E3EBFB;
+  --bubble: #1F7AF5;
+  --ok: #17803D;
+  --ok-soft: #DDF3E4;
+  --warn: #A15C00;
+  --warn-soft: #FCEFD9;
+  --danger: #B42318;
+  --danger-soft: #FBE3E1;
+  --font-display: "Bricolage Grotesque", ui-rounded, system-ui, sans-serif;
+  --font-body: "Figtree", -apple-system, system-ui, "Segoe UI", sans-serif;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E141D; --surface: #18212E; --ink: #E8EDF5; --muted: #98A3B5; --line: #2A3546;
+    --accent: #6F9BFF; --accent-ink: #0B1220; --accent-soft: #1C2A45; --bubble: #2F86FF;
+    --ok: #5BD08A; --ok-soft: #173426; --warn: #F2B35B; --warn-soft: #3A2B14;
+    --danger: #FF8A80; --danger-soft: #3D1D1B; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E141D; --surface: #18212E; --ink: #E8EDF5; --muted: #98A3B5; --line: #2A3546;
+  --accent: #6F9BFF; --accent-ink: #0B1220; --accent-soft: #1C2A45; --bubble: #2F86FF;
+  --ok: #5BD08A; --ok-soft: #173426; --warn: #F2B35B; --warn-soft: #3A2B14;
+  --danger: #FF8A80; --danger-soft: #3D1D1B; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap {
+  max-width: 560px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 calc(96px + env(safe-area-inset-bottom, 0px));
+}
+header.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg); padding-block: 14px 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+header.top h1 {
+  font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: -0.01em;
+  margin: 0; flex: 1; min-width: 0; text-wrap: balance;
+}
+.backbtn { border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; padding: 6px 0; cursor: pointer; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 19px; margin: 0; }
+.label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 600; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.row { display: flex; align-items: center; gap: 10px; }
+.row > .grow { flex: 1; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.list { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.list > * + * { border-top: 1px solid var(--line); }
+.item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 56px; }
+.item.tap { cursor: pointer; width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; color: inherit; font: inherit; }
+.list > .item.tap:first-child { border-top: 0; }
+.item .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item .sub { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chev { color: var(--muted); font-size: 20px; }
+.avatar {
+  width: 38px; height: 38px; border-radius: 50%; flex: none;
+  display: grid; place-items: center; font-weight: 600; font-size: 14px;
+  background: var(--accent-soft); color: var(--accent);
+}
+.count { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 14px; padding: 3px 9px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.count.full { background: var(--warn-soft); color: var(--warn); }
+button, .btn { font: inherit; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 10px 18px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); font-weight: 600; cursor: pointer; text-decoration: none; text-align: center;
+}
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.bubble { background: var(--bubble); color: #FFFFFF; border-color: var(--bubble); font-size: 18px; min-height: 56px; }
+.btn.ok { background: var(--ok); color: var(--surface); border-color: var(--ok); }
+.btn.danger { color: var(--danger); border-color: var(--danger-soft); background: var(--danger-soft); }
+.btn.block { width: 100%; }
+.btn.small { min-height: 36px; padding: 6px 12px; font-size: 14px; border-radius: 10px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:focus-visible, .item.tap:focus-visible, input:focus-visible, textarea:focus-visible, .tabbar button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.btnrow { display: flex; gap: 10px; flex-wrap: wrap; }
+.btnrow > .btn { flex: 1 1 140px; }
+input[type=text], input[type=tel], input[type=search], textarea {
+  width: 100%; font: inherit; font-size: 16px; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+}
+textarea { min-height: 130px; resize: vertical; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-weight: 600; font-size: 14px; }
+.check { width: 24px; height: 24px; flex: none; accent-color: var(--accent); }
+.empty { text-align: center; padding: 28px 18px; }
+.empty p { margin: 6px 0 0; }
+.steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; }
+.note { font-size: 14px; color: var(--muted); padding: 12px 14px; border-radius: 12px; background: var(--accent-soft); }
+.note strong { color: var(--ink); }
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 20;
+  background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 99px; font-weight: 600; font-size: 14px;
+  max-width: calc(100% - 32px); text-align: center;
+}
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+}
+.tabbar .in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); }
+.tabbar button {
+  border: 0; background: none; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600;
+  padding: 8px 4px 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer;
+}
+.tabbar button[aria-current="page"] { color: var(--accent); }
+.tabbar svg { width: 24px; height: 24px; }
+/* Send run */
+.progress { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.progress > div { height: 100%; background: var(--ok); transition: width .3s; }
+.bubblepreview {
+  align-self: flex-end; max-width: 88%; background: var(--bubble); color: #FFFFFF;
+  padding: 10px 14px; border-radius: 18px 18px 4px 18px; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.recip { font-family: var(--font-display); font-size: 24px; font-weight: 700; margin: 0; overflow-wrap: anywhere; }
+.num { font-variant-numeric: tabular-nums; font-size: 17px; user-select: all; -webkit-user-select: all; }
+.pill { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+.pill.sent { background: var(--ok-soft); color: var(--ok); }
+.pill.skipped { background: var(--warn-soft); color: var(--warn); }
+.pill.pending { background: var(--line); color: var(--muted); }
+.pill.now { background: var(--accent-soft); color: var(--accent); }
+.ask { border: 2px solid var(--accent); }
+.charcount { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.sync { font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .progress > div { transition: none; } }
+</style>
+
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<nav class="tabbar" aria-label="Sections">
+  <div class="in">
+    <button id="tab-groups" data-tab="groups"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.5c2.4 0 4.1 1.5 4.5 4"/></svg>Groups</button>
+    <button id="tab-contacts" data-tab="contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><circle cx="12" cy="10" r="3"/><path d="M7.5 17.5c.8-2 2.4-3 4.5-3s3.7 1 4.5 3"/></svg>Contacts</button>
+    <button id="tab-settings" data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>My phone</button>
+  </div>
+</nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  const MAX = 40;
+  const CHUNK = 600;
+  const LS_KEY = "onebyone.state.v1";
+  const isApple = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
+
+  // ---------- state ----------
+  const blank = () => ({
+    contacts: [], groups: [],
+    settings: { myNumber: "", signature: "", country: "1" },
+    run: null, history: [], updatedAt: 0
+  });
+  let S = blank();
+  let view = { name: "groups" };
+  let db = null, userId = null, syncState = "This phone only";
+
+  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+  const $ = (sel) => document.querySelector(sel);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function loadLocal() {
+    try { const raw = localStorage.getItem(LS_KEY); if (raw) return Object.assign(blank(), JSON.parse(raw)); } catch (e) {}
+    return null;
+  }
+  function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) {} }
+
+  let saveTimer = null;
+  function save() {
+    S.updatedAt = Date.now();
+    saveLocal();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveRemote, 700);
+  }
+  async function saveRemote() {
+    if (!db || !userId) return;
+    const base = "data/users/" + userId;
+    const chunks = [];
+    for (let i = 0; i < S.contacts.length; i += CHUNK) chunks.push(S.contacts.slice(i, i + CHUNK));
+    try {
+      for (let i = 0; i < chunks.length; i++) await db.doc(base + "/contacts/c" + i).set({ list: chunks[i] });
+      const { contacts, ...core } = S;
+      const prev = remoteChunks;
+      await db.doc(base + "/app/core").set(Object.assign({}, core, { chunks: chunks.length }));
+      for (let i = chunks.length; i < prev; i++) { try { await db.doc(base + "/contacts/c" + i).delete(); } catch (e) {} }
+      remoteChunks = chunks.length;
+      setSync("Saved to your account");
+    } catch (e) { setSync("Saved on this phone (account save failed)"); }
+  }
+  let remoteChunks = 0;
+  async function loadRemote() {
+    const base = "data/users/" + userId;
+    const coreSnap = await db.doc(base + "/app/core").get();
+    if (!coreSnap.exists) return null;
+    const core = coreSnap.data() || {};
+    const n = core.chunks || 0;
+    remoteChunks = n;
+    let contacts = [];
+    for (let i = 0; i < n; i++) {
+      const s = await db.doc(base + "/contacts/c" + i).get();
+      if (s.exists) contacts = contacts.concat((s.data() || {}).list || []);
+    }
+    delete core.chunks;
+    return Object.assign(blank(), core, { contacts });
+  }
+  function setSync(t) { syncState = t; const el = $("#sync"); if (el) el.textContent = t; }
+
+  // ---------- phone numbers ----------
+  function normalize(raw, cc) {
+    let s = String(raw || "").trim().replace(/^tel:/i, "");
+    const plus = s.startsWith("+");
+    let d = s.replace(/\D/g, "");
+    if (!d) return "";
+    if (plus) return "+" + d;
+    if (d.startsWith("00")) return "+" + d.slice(2);
+    cc = cc || "1";
+    if (cc === "1") {
+      if (d.length === 10) return "+1" + d;
+      if (d.length === 11 && d[0] === "1") return "+" + d;
+    }
+    return d.length > 10 ? "+" + d : "+" + cc + d;
+  }
+  function pretty(n) {
+    const m = /^\+1(\d{3})(\d{3})(\d{4})$/.exec(n || "");
+    return m ? `(${m[1]}) ${m[2]}-${m[3]}` : (n || "");
+  }
+  const initials = (name) => (name || "?").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+  const firstName = (name) => (name || "").trim().split(/\s+/)[0] || "";
+
+  // ---------- vCard ----------
+  function decodeQP(s) {
+    try {
+      const bytes = [];
+      s = s.replace(/=\r?\n/g, "");
+      for (let i = 0; i < s.length; i++) {
+        if (s[i] === "=" && /^[0-9A-F]{2}$/i.test(s.substr(i + 1, 2))) { bytes.push(parseInt(s.substr(i + 1, 2), 16)); i += 2; }
+        else bytes.push(s.charCodeAt(i));
+      }
+      return new TextDecoder().decode(new Uint8Array(bytes));
+    } catch (e) { return s; }
+  }
+  const unesc = (v) => v.replace(/\\n/gi, " ").replace(/\\([,;\\])/g, "$1");
+  function parseVCF(text, cc) {
+    const lines = text.replace(/\r\n/g, "\n").replace(/\n[ \t]/g, "").split("\n");
+    const out = [];
+    let cur = null;
+    for (const line of lines) {
+      const up = line.toUpperCase();
+      if (up.startsWith("BEGIN:VCARD")) { cur = { fn: "", n: "", org: "", tels: [] }; continue; }
+      if (up.startsWith("END:VCARD")) { if (cur) out.push(cur); cur = null; continue; }
+      if (!cur) continue;
+      const ci = line.indexOf(":");
+      if (ci < 0) continue;
+      let key = line.slice(0, ci); let val = line.slice(ci + 1);
+      const parts = key.split(";");
+      const prop = parts[0].replace(/^[^.]*\./, "").toUpperCase();
+      const params = parts.slice(1).join(";").toUpperCase();
+      if (params.includes("QUOTED-PRINTABLE")) val = decodeQP(val);
+      if (prop === "FN") cur.fn = unesc(val).trim();
+      else if (prop === "N") { const p = val.split(";").map(unesc); cur.n = [p[3], p[1], p[2], p[0], p[4]].filter(Boolean).join(" ").trim(); }
+      else if (prop === "ORG") cur.org = unesc(val.split(";")[0]).trim();
+      else if (prop === "TEL") {
+        const num = normalize(val, cc);
+        if (!num) continue;
+        let label = "phone";
+        if (/IPHONE/.test(params)) label = "iPhone";
+        else if (/CELL|MOBILE/.test(params)) label = "mobile";
+        else if (/HOME/.test(params)) label = "home";
+        else if (/WORK/.test(params)) label = "work";
+        const fax = /FAX/.test(params);
+        if (!fax) cur.tels.push({ label, num, pref: /PREF/.test(params) });
+      }
+    }
+    const rank = (t) => (t.label === "iPhone" ? 0 : t.label === "mobile" ? 1 : t.pref ? 2 : 3);
+    return out.filter(c => c.tels.length).map(c => {
+      const tels = c.tels.slice().sort((a, b) => rank(a) - rank(b));
+      const seen = new Set();
+      const phones = tels.filter(t => !seen.has(t.num) && seen.add(t.num)).map(t => ({ label: t.label, num: t.num }));
+      return { name: c.fn || c.n || c.org || pretty(phones[0].num), phones, phone: phones[0].num };
+    });
+  }
+  function mergeContacts(list) {
+    const byPhone = new Map();
+    S.contacts.forEach(c => (c.phones || [{ num: c.phone }]).forEach(p => byPhone.set(p.num, c)));
+    let added = 0, updated = 0;
+    for (const c of list) {
+      const hit = c.phones.map(p => byPhone.get(p.num)).find(Boolean);
+      if (hit) { hit.name = c.name; const nums = new Set(hit.phones.map(p => p.num)); c.phones.forEach(p => { if (!nums.has(p.num)) hit.phones.push(p); }); updated++; }
+      else { const nc = Object.assign({ id: uid() }, c); S.contacts.push(nc); nc.phones.forEach(p => byPhone.set(p.num, nc)); added++; }
+    }
+    S.contacts.sort((a, b) => a.name.localeCompare(b.name));
+    return { added, updated };
+  }
+
+  // ---------- helpers ----------
+  const contactById = (id) => S.contacts.find(c => c.id === id);
+  const groupById = (id) => S.groups.find(g => g.id === id);
+  function personalize(msg, name) {
+    let t = msg.replace(/\{first\}/gi, firstName(name)).replace(/\{name\}/gi, name || "");
+    if (S.settings.signature) t += "\n" + S.settings.signature;
+    return t;
+  }
+  function smsHref(num, body) {
+    const b = encodeURIComponent(body);
+    return isApple ? `sms:${num}&body=${b}` : `sms:${num}?body=${b}`;
+  }
+  let toastT;
+  function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 2200); }
+  async function copy(text, what) {
+    try { await navigator.clipboard.writeText(text); toast(what + " copied"); }
+    catch (e) { toast("Press and hold the text to copy it"); }
+  }
+  function go(v) { view = v; render(); window.scrollTo(0, 0); }
+  let armed = null; // two-tap confirmations
+  function armedBtn(key, label, armedLabel) { return armed === key ? armedLabel : label; }
+
+  // ---------- views ----------
+  function topbar(title, back) {
+    return `<header class="top">${back ? `<button class="backbtn" data-act="back" data-to="${back}">‹ Back</button>` : ""}<h1>${esc(title)}</h1></header>`;
+  }
+
+  function vGroups() {
+    let h = topbar("Group texts");
+    if (S.run && S.run.items.some(i => i.status === "pending")) {
+      const done = S.run.items.filter(i => i.status !== "pending").length;
+      h += `<div class="card stack ask" style="margin-bottom:14px"><div class="row"><div class="grow"><div class="label">In progress</div><h2>${esc(S.run.groupName)}</h2><div class="muted small">${done} of ${S.run.items.length} done</div></div></div><button class="btn primary block" data-act="resume">Continue sending</button></div>`;
+    }
+    if (!S.contacts.length && !S.groups.length) {
+      h += `<div class="card stack"><h2>Get started</h2><ol class="steps">
+        <li>Bring in your iPhone contacts on the <strong>Contacts</strong> tab.</li>
+        <li>Make a group and pick up to ${MAX} people.</li>
+        <li>Write a message. The app opens Messages once per person, from your own number, so each reply comes back only to you.</li></ol>
+        <button class="btn primary" data-act="tab" data-to="contacts">Add contacts</button></div>`;
+      return h;
+    }
+    h += `<div class="stack">`;
+    if (S.groups.length) {
+      h += `<div class="list">` + S.groups.map(g => `<button class="item tap" data-act="open-group" data-id="${g.id}">
+        <div class="grow" style="min-width:0"><div class="name">${esc(g.name)}</div><div class="sub">${esc(g.members.map(id => (contactById(id) || {}).name).filter(Boolean).slice(0, 4).join(", ")) || "No one yet"}</div></div>
+        <span class="count ${g.members.length >= MAX ? "full" : ""}">${g.members.length}/${MAX}</span><span class="chev">›</span></button>`).join("") + `</div>`;
+    } else {
+      h += `<div class="card empty"><h2>No groups yet</h2><p class="muted">Make one to start sending.</p></div>`;
+    }
+    h += `<div class="row"><input type="text" id="newgroup" placeholder="New group name, like Soccer parents" maxlength="60"><button class="btn primary" data-act="add-group">Create</button></div>`;
+    if (S.history.length) {
+      h += `<div class="label" style="margin-top:8px">Recent sends</div><div class="list">` + S.history.slice(0, 6).map(r =>
+        `<div class="item"><div class="grow" style="min-width:0"><div class="name">${esc(r.groupName)}</div><div class="sub">${esc(r.preview)}</div></div><div class="sub" style="text-align:right">${r.sent}/${r.count} sent<br>${new Date(r.at).toLocaleDateString()}</div></div>`).join("") + `</div>`;
+    }
+    return h + `</div>`;
+  }
+
+  function vGroup() {
+    const g = groupById(view.id);
+    if (!g) { view = { name: "groups" }; return vGroups(); }
+    const members = g.members.map(contactById).filter(Boolean);
+    let h = topbar(g.name, "groups");
+    h += `<div class="stack">
+      <div class="row"><span class="count ${members.length >= MAX ? "full" : ""}">${members.length} of ${MAX} people</span><span class="grow"></span>
+      <button class="btn small" data-act="pick">Add people</button></div>`;
+    if (members.length) {
+      h += `<div class="list">` + members.map(c => `<div class="item"><div class="avatar">${esc(initials(c.name))}</div>
+        <div class="grow" style="min-width:0"><div class="name">${esc(c.name)}</div><div class="sub">${esc(pretty(c.phone))}</div></div>
+        <button class="btn small" data-act="remove-member" data-id="${c.id}" aria-label="Remove ${esc(c.name)}">Remove</button></div>`).join("") + `</div>`;
+      h += `<button class="btn primary block" data-act="compose">Write message to ${members.length}</button>`;
+    } else {
+      h += `<div class="card empty"><h2>No one in this group</h2><p class="muted">Add up to ${MAX} people from your contacts.</p><p><button class="btn primary" data-act="pick">Add people</button></p></div>`;
+    }
+    h += `<div class="card stack"><div class="field"><label for="rename">Group name</label><input type="text" id="rename" value="${esc(g.name)}" maxlength="60"></div>
+      <div class="btnrow"><button class="btn" data-act="rename">Save name</button><button class="btn danger" data-act="del-group">${armedBtn("delg" + g.id, "Delete group", "Tap again to delete")}</button></div></div></div>`;
+    return h;
+  }
+
+  let pickQuery = "";
+  function vPick() {
+    const g = groupById(view.id);
+    if (!g) { view = { name: "groups" }; return vGroups(); }
+    const sel = new Set(g.members);
+    const q = pickQuery.toLowerCase();
+    const digits = q.replace(/\D/g, "");
+    const list = S.contacts.filter(c => !q || c.name.toLowerCase().includes(q) || (digits && c.phone.includes(digits)));
+    let h = topbar("Add to " + g.name, "group");
+    h += `<div class="stack"><div class="row"><span class="count ${sel.size >= MAX ? "full" : ""}">${sel.size} of ${MAX} picked</span><span class="grow"></span><button class="btn small primary" data-act="back" data-to="group">Done</button></div>
+      <input type="search" id="pickq" placeholder="Search name or number" value="${esc(pickQuery)}" autocomplete="off">`;
+    if (!S.contacts.length) {
+      h += `<div class="card empty"><h2>No contacts yet</h2><p class="muted">Bring in your contacts first.</p><p><button class="btn primary" data-act="tab" data-to="contacts">Go to Contacts</button></p></div>`;
+    } else {
+      h += `<div class="list">` + list.slice(0, 300).map(c => {
+        const on = sel.has(c.id);
+        return `<label class="item tap" for="pk-${c.id}"><input type="checkbox" class="check" id="pk-${c.id}" data-act="toggle" data-id="${c.id}" ${on ? "checked" : ""} ${!on && sel.size >= MAX ? "disabled" : ""}>
+          <div class="grow" style="min-width:0"><div class="name">${esc(c.name)}</div><div class="sub">${esc(pretty(c.phone))}</div></div></label>`;
+      }).join("") + `</div>`;
+      if (list.length > 300) h += `<p class="muted small">Showing 300 of ${list.length}. Search to narrow it down.</p>`;
+      if (!list.length) h += `<p class="muted">No contacts match.</p>`;
+      if (sel.size >= MAX) h += `<p class="note">This group is full at ${MAX}. Remove someone to add another person.</p>`;
+    }
+    return h + `</div>`;
+  }
+
+  let draft = "";
+  function vCompose() {
+    const g = groupById(view.id);
+    if (!g) { view = { name: "groups" }; return vGroups(); }
+    const members = g.members.map(contactById).filter(Boolean);
+    const sample = members[0];
+    const preview = draft.trim() ? personalize(draft, sample ? sample.name : "") : "";
+    let h = topbar("Message " + g.name, "group");
+    h += `<div class="stack">
+      <div class="field"><label for="msg">Your message</label><textarea id="msg" placeholder="Hi {first}, practice moves to 6pm Thursday.">${esc(draft)}</textarea>
+      <div class="row"><span class="muted small grow">Type {first} to drop in each person's first name.</span><span class="charcount" id="cc">${draft.length} chars</span></div></div>`;
+    h += `<div class="card stack"><div class="label">Preview${sample ? " for " + esc(sample.name) : ""}</div>${preview ? `<div class="bubblepreview" id="pv">${esc(preview)}</div>` : `<div class="muted small" id="pv">Your message will show here.</div>`}</div>`;
+    h += `<p class="note">Each of the <strong>${members.length} people</strong> gets their own text from your number, one at a time. Nobody sees the others, and replies come only to you.</p>
+      <button class="btn primary block" data-act="start" ${draft.trim() && members.length ? "" : "disabled"}>Start sending</button></div>`;
+    return h;
+  }
+
+  function vRun() {
+    const r = S.run;
+    if (!r) { view = { name: "groups" }; return vGroups(); }
+    const done = r.items.filter(i => i.status !== "pending").length;
+    const sent = r.items.filter(i => i.status === "sent").length;
+    const cur = r.items.find(i => i.status === "pending");
+    let h = topbar(r.groupName, "groups");
+    h += `<div class="stack"><div class="row"><span class="grow small muted">${done} of ${r.items.length} done · ${sent} sent</span></div>
+      <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${r.items.length}" aria-valuenow="${done}"><div style="width:${(done / r.items.length) * 100}%"></div></div>`;
+    if (cur) {
+      const body = personalize(r.message, cur.name);
+      const idx = r.items.indexOf(cur) + 1;
+      h += `<div class="card stack ${cur.opened ? "ask" : ""}">
+        <div class="label">Person ${idx} of ${r.items.length}</div>
+        <p class="recip">${esc(cur.name)}</p><div class="num">${esc(pretty(cur.phone))}</div>
+        <div class="bubblepreview">${esc(body)}</div>`;
+      if (cur.opened) {
+        h += `<p style="margin:4px 0 0;font-weight:600">Did you tap Send in Messages?</p>
+          <div class="btnrow"><button class="btn ok" data-act="mark-sent">Yes, next person</button><a class="btn" href="${esc(smsHref(cur.phone, body))}" data-act="opened">Open again</a></div>`;
+      } else {
+        h += `<a class="btn bubble block" href="${esc(smsHref(cur.phone, body))}" data-act="opened">Open in Messages</a>
+          <button class="btn" data-act="mark-sent">I sent it, next person</button>`;
+      }
+      h += `<div class="btnrow"><button class="btn small" data-act="copy-num">Copy number</button><button class="btn small" data-act="copy-msg">Copy message</button><button class="btn small" data-act="skip">Skip</button></div></div>
+        <p class="muted small">Messages opens with the text filled in. Tap send there, then come back here for the next person.</p>`;
+    } else {
+      h += `<div class="card stack"><h2>All done</h2><p class="muted" style="margin:0">${sent} of ${r.items.length} people got your text.</p><button class="btn primary" data-act="finish">Back to groups</button></div>`;
+    }
+    h += `<div class="list">` + r.items.map(i => {
+      const st = i === cur ? "now" : i.status;
+      const lbl = { now: "Up next", sent: "Sent", skipped: "Skipped", pending: "Waiting" }[st];
+      return `<div class="item"><div class="grow" style="min-width:0"><div class="name">${esc(i.name)}</div><div class="sub">${esc(pretty(i.phone))}</div></div>
+        <span class="pill ${st}">${lbl}</span>${i.status === "skipped" ? `<button class="btn small" data-act="unskip" data-id="${i.cid}">Redo</button>` : ""}</div>`;
+    }).join("") + `</div>`;
+    if (cur) h += `<button class="btn danger" data-act="cancel-run">${armedBtn("cancel", "Stop this send", "Tap again to stop")}</button>`;
+    return h + `</div>`;
+  }
+
+  let contactQuery = "";
+  function vContacts() {
+    let h = topbar("Contacts");
+    h += `<div class="stack">
+      <div class="card stack"><h2>Bring in your iPhone contacts</h2>
+        <ol class="steps small"><li>Open the <strong>Contacts</strong> app. Tap <strong>Lists</strong> at top left, then press and hold <strong>All Contacts</strong> (or one of your lists).</li>
+        <li>Tap <strong>Export</strong>, then <strong>Save to Files</strong>. You can also share a single contact and save it the same way.</li>
+        <li>Come back here and tap <strong>Choose vCard file</strong>.</li></ol>
+        <label class="btn primary" for="vcf">Choose vCard file</label><input type="file" id="vcf" accept=".vcf,text/vcard,text/x-vcard,text/directory" multiple hidden>
+        <p class="muted small" style="margin:0">Your contacts stay on this phone. Bringing them in again updates names and skips duplicates.</p></div>
+      <details class="card"><summary style="font-weight:600;cursor:pointer">Add one person by hand</summary>
+        <div class="stack" style="margin-top:12px"><div class="field"><label for="nname">Name</label><input type="text" id="nname" autocomplete="off"></div>
+        <div class="field"><label for="nphone">Mobile number</label><input type="tel" id="nphone" placeholder="(555) 555-0123" autocomplete="off"></div>
+        <button class="btn" data-act="add-contact">Add contact</button></div></details>`;
+    if (S.contacts.length) {
+      const q = contactQuery.toLowerCase(), digits = q.replace(/\D/g, "");
+      const list = S.contacts.filter(c => !q || c.name.toLowerCase().includes(q) || (digits && c.phone.includes(digits)));
+      h += `<div class="row"><div class="label grow">${S.contacts.length} contacts</div><button class="btn small danger" data-act="clear-contacts">${armedBtn("clearc", "Remove all", "Tap again to remove all")}</button></div>
+        <input type="search" id="cq" placeholder="Search name or number" value="${esc(contactQuery)}" autocomplete="off">
+        <div class="list">` + list.slice(0, 300).map(c => {
+          const multi = (c.phones || []).length > 1;
+          return `<div class="item"><div class="avatar">${esc(initials(c.name))}</div><div class="grow" style="min-width:0"><div class="name">${esc(c.name)}</div>
+          ${multi ? `<select data-act="phone-pick" data-id="${c.id}" aria-label="Number to text for ${esc(c.name)}" style="font:inherit;font-size:14px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px 4px;max-width:100%">${c.phones.map(p => `<option value="${esc(p.num)}" ${p.num === c.phone ? "selected" : ""}>${esc(p.label)}: ${esc(pretty(p.num))}</option>`).join("")}</select>` : `<div class="sub">${esc(pretty(c.phone))}</div>`}
+          </div><button class="btn small" data-act="del-contact" data-id="${c.id}" aria-label="Delete ${esc(c.name)}">${armedBtn("delc" + c.id, "Delete", "Sure?")}</button></div>`;
+        }).join("") + `</div>`;
+      if (list.length > 300) h += `<p class="muted small">Showing 300 of ${list.length}. Search to narrow it down.</p>`;
+    }
+    return h + `</div>`;
+  }
+
+  function vSettings() {
+    const s = S.settings;
+    let h = topbar("My phone");
+    h += `<div class="stack">
+      <div class="card stack"><h2>How your texts go out</h2>
+        <p style="margin:0">This app never sends anything on its own. For each person it opens the Messages app on this iPhone with their number and your words filled in, and you tap send. So every text comes from your own Verizon number, exactly like a text you typed yourself, and each person replies only to you.</p>
+        <p class="muted small" style="margin:0">Use this app on the iPhone that has your Verizon line. Open it in Safari and choose Share, then Add to Home Screen, so it opens like an app. Bring in your contacts from the Home Screen app, since it keeps its own copy separate from Safari.</p></div>
+      <div class="card stack">
+        <div class="field"><label for="mynum">My number</label><input type="tel" id="mynum" value="${esc(pretty(s.myNumber))}" placeholder="(555) 555-0123" autocomplete="tel"><span class="muted small">Shown here so you can confirm you are on the right phone. Messages always uses the line in this phone.</span></div>
+        <div class="field"><label for="sig">Sign every text with (optional)</label><input type="text" id="sig" value="${esc(s.signature)}" placeholder="- Joe" maxlength="60"></div>
+        <div class="field"><label for="country">Country code for numbers without one</label><input type="tel" id="country" value="${esc(s.country)}" maxlength="4"></div>
+        <button class="btn primary" data-act="save-settings">Save</button></div>
+      <div class="card stack"><h2>Backup</h2><p class="muted small" style="margin:0">Copy everything (contacts, groups, settings) as text you can keep in Notes, and paste it back here later.</p>
+        <div class="btnrow"><button class="btn" data-act="export">Copy backup</button><button class="btn" data-act="show-import">Restore from backup</button></div>
+        <div id="importbox" hidden class="stack"><textarea id="importtxt" placeholder="Paste your backup here"></textarea><button class="btn primary" data-act="import">Restore</button></div></div>
+      <p class="sync" id="sync">${esc(syncState)}</p></div>`;
+    return h;
+  }
+
+  function render() {
+    const map = { groups: vGroups, group: vGroup, pick: vPick, compose: vCompose, run: vRun, contacts: vContacts, settings: vSettings };
+    $("#app").innerHTML = (map[view.name] || vGroups)();
+    const tab = ["contacts", "settings"].includes(view.name) ? view.name : "groups";
+    document.querySelectorAll(".tabbar button").forEach(b => b.setAttribute("aria-current", b.dataset.tab === tab ? "page" : "false"));
+  }
+
+  // ---------- events ----------
+  document.addEventListener("click", (e) => {
+    const tabBtn = e.target.closest(".tabbar button");
+    if (tabBtn) { armed = null; go({ name: tabBtn.dataset.tab }); return; }
+    const el = e.target.closest("[data-act]");
+    if (!el || el.tagName === "SELECT") return;
+    const act = el.dataset.act, id = el.dataset.id;
+    const prevArmed = armed; armed = null;
+    switch (act) {
+      case "tab": go({ name: el.dataset.to }); break;
+      case "back":
+        if (el.dataset.to === "group") go({ name: "group", id: view.id });
+        else go({ name: el.dataset.to });
+        break;
+      case "add-group": {
+        const name = $("#newgroup").value.trim();
+        if (!name) { toast("Type a name for the group"); $("#newgroup").focus(); return; }
+        const g = { id: uid(), name, members: [] };
+        S.groups.push(g); save(); go({ name: "group", id: g.id }); break;
+      }
+      case "open-group": go({ name: "group", id }); break;
+      case "pick": pickQuery = ""; go({ name: "pick", id: view.id }); break;
+      case "toggle": {
+        const g = groupById(view.id);
+        const i = g.members.indexOf(id);
+        if (i >= 0) g.members.splice(i, 1);
+        else if (g.members.length < MAX) g.members.push(id);
+        save(); const y = window.scrollY; render(); window.scrollTo(0, y); break;
+      }
+      case "remove-member": { const g = groupById(view.id); g.members = g.members.filter(m => m !== id); save(); render(); break; }
+      case "rename": { const g = groupById(view.id); const n = $("#rename").value.trim(); if (n) { g.name = n; save(); render(); toast("Name saved"); } break; }
+      case "del-group": {
+        const key = "delg" + view.id;
+        if (prevArmed !== key) { armed = key; render(); return; }
+        S.groups = S.groups.filter(g => g.id !== view.id); save(); go({ name: "groups" }); toast("Group deleted"); break;
+      }
+      case "compose": draft = draft || ""; go({ name: "compose", id: view.id }); break;
+      case "start": {
+        const g = groupById(view.id);
+        const members = g.members.map(contactById).filter(Boolean);
+        if (!draft.trim() || !members.length) return;
+        S.run = { groupId: g.id, groupName: g.name, message: draft.trim(), startedAt: Date.now(),
+          items: members.map(c => ({ cid: c.id, name: c.name, phone: c.phone, status: "pending" })) };
+        draft = ""; save(); go({ name: "run" }); break;
+      }
+      case "resume": go({ name: "run" }); break;
+      case "opened": {
+        const cur = S.run.items.find(i => i.status === "pending");
+        if (cur) { cur.opened = true; save(); setTimeout(render, 400); }
+        return; // let the link open Messages
+      }
+      case "mark-sent": case "skip": {
+        const cur = S.run.items.find(i => i.status === "pending");
+        if (cur) { cur.status = act === "skip" ? "skipped" : "sent"; delete cur.opened; save(); render(); }
+        break;
+      }
+      case "unskip": { const it = S.run.items.find(i => i.cid === id); if (it) { it.status = "pending"; S.run.items.splice(S.run.items.indexOf(it), 1); const firstPending = S.run.items.findIndex(i => i.status === "pending"); S.run.items.splice(firstPending < 0 ? S.run.items.length : firstPending, 0, it); save(); render(); } break; }
+      case "copy-num": { const cur = S.run.items.find(i => i.status === "pending"); if (cur) copy(cur.phone, "Number"); break; }
+      case "copy-msg": { const cur = S.run.items.find(i => i.status === "pending"); if (cur) copy(personalize(S.run.message, cur.name), "Message"); break; }
+      case "copy-shortcut": {
+        const items = S.run.items.filter(i => i.status === "pending").map(i => ({ to: i.phone, text: personalize(S.run.message, i.name) }));
+        copy(JSON.stringify({ messages: items }), items.length + " texts"); break;
+      }
+      case "all-sent": {
+        if (prevArmed !== "allsent") { armed = "allsent"; render(); return; }
+        S.run.items.forEach(i => { if (i.status === "pending") { i.status = "sent"; delete i.opened; } }); save(); render(); break;
+      }
+      case "cancel-run": case "finish": {
+        if (act === "cancel-run" && prevArmed !== "cancel") { armed = "cancel"; render(); return; }
+        const r = S.run;
+        S.history.unshift({ groupName: r.groupName, count: r.items.length, sent: r.items.filter(i => i.status === "sent").length, at: Date.now(), preview: r.message.slice(0, 80) });
+        S.history = S.history.slice(0, 20); S.run = null; save(); go({ name: "groups" }); break;
+      }
+      case "add-contact": {
+        const name = $("#nname").value.trim(), num = normalize($("#nphone").value, S.settings.country);
+        if (!name || num.replace(/\D/g, "").length < 7) { toast("Enter a name and a full phone number"); return; }
+        const r = mergeContacts([{ name, phones: [{ label: "mobile", num }], phone: num }]);
+        save(); render(); toast(r.added ? "Added " + name : "Updated " + name); break;
+      }
+      case "del-contact": {
+        const key = "delc" + id;
+        if (prevArmed !== key) { armed = key; render(); return; }
+        S.contacts = S.contacts.filter(c => c.id !== id);
+        S.groups.forEach(g => g.members = g.members.filter(m => m !== id)); save(); render(); break;
+      }
+      case "clear-contacts": {
+        if (prevArmed !== "clearc") { armed = "clearc"; render(); return; }
+        S.contacts = []; S.groups.forEach(g => g.members = []); save(); render(); toast("Contacts removed"); break;
+      }
+      case "save-settings": {
+        S.settings.myNumber = normalize($("#mynum").value, $("#country").value.replace(/\D/g, "") || "1");
+        S.settings.signature = $("#sig").value.trim();
+        S.settings.country = ($("#country").value.replace(/\D/g, "") || "1");
+        save(); render(); toast("Saved"); break;
+      }
+      case "export": copy(JSON.stringify({ app: "onebyone", v: 1, contacts: S.contacts, groups: S.groups, settings: S.settings, history: S.history }), "Backup"); break;
+      case "show-import": $("#importbox").hidden = false; $("#importtxt").focus(); break;
+      case "import": {
+        try {
+          const d = JSON.parse($("#importtxt").value);
+          if (d.app !== "onebyone") throw 0;
+          S.contacts = d.contacts || []; S.groups = d.groups || []; S.settings = Object.assign(blank().settings, d.settings || {}); S.history = d.history || [];
+          save(); go({ name: "groups" }); toast("Backup restored");
+        } catch (err) { toast("That text isn't a backup from this app"); }
+        break;
+      }
+    }
+  });
+  document.addEventListener("input", (e) => {
+    if (e.target.id === "msg") {
+      draft = e.target.value;
+      $("#cc").textContent = draft.length + " chars";
+      const g = groupById(view.id); const first = g && contactById(g.members[0]);
+      const pv = $("#pv");
+      if (draft.trim()) { if (pv.tagName !== "DIV" || !pv.classList.contains("bubblepreview")) { pv.className = "bubblepreview"; } pv.textContent = personalize(draft, first ? first.name : ""); }
+      else { pv.className = "muted small"; pv.textContent = "Your message will show here."; }
+      const btn = document.querySelector('[data-act="start"]'); if (btn) btn.disabled = !(draft.trim() && g && g.members.length);
+    } else if (e.target.id === "pickq") {
+      pickQuery = e.target.value; const pos = e.target.selectionStart; render(); const i = $("#pickq"); i.focus(); i.setSelectionRange(pos, pos);
+    } else if (e.target.id === "cq") {
+      contactQuery = e.target.value; const pos = e.target.selectionStart; render(); const i = $("#cq"); i.focus(); i.setSelectionRange(pos, pos);
+    }
+  });
+  document.addEventListener("change", async (e) => {
+    if (e.target.id === "vcf") {
+      let all = [];
+      for (const f of e.target.files) { try { all = all.concat(parseVCF(await f.text(), S.settings.country)); } catch (err) {} }
+      if (!all.length) { toast("No contacts with phone numbers found in that file"); return; }
+      const r = mergeContacts(all); save(); render();
+      toast(`${r.added} added${r.updated ? ", " + r.updated + " updated" : ""}`);
+    } else if (e.target.dataset && e.target.dataset.act === "phone-pick") {
+      const c = contactById(e.target.dataset.id); if (c) { c.phone = e.target.value; save(); toast("Will text " + pretty(c.phone)); }
+    }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "newgroup") document.querySelector('[data-act="add-group"]').click(); });
+  // Coming back from Messages: show the "did you send it?" prompt
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && view.name === "run") render(); });
+
+  // ---------- boot ----------
+  const local = loadLocal();
+  if (local) S = local;
+  if (S.run && S.run.items.some(i => i.status === "pending")) view = { name: "run" };
+  render();
+
+  (async () => {
+    try {
+      if (!window.claude || !window.claude.use) return;
+      const [d, u] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      if (!d || !u) return;
+      const id = await u.id();
+      if (!id) return;
+      db = d; userId = id;
+      const remote = await loadRemote().catch(() => null);
+      if (remote && (remote.updatedAt || 0) > (S.updatedAt || 0)) {
+        S = remote; saveLocal();
+        if (S.run && S.run.items.some(i => i.status === "pending") && view.name === "groups") view = { name: "run" };
+        render();
+      } else if (S.updatedAt) { saveRemote(); }
+      setSync("Saved to your account");
+    } catch (e) {}
+  })();
+})();
+</script>
+
+</body>
+</html>
