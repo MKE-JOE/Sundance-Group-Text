@@ -460,7 +460,11 @@ textarea { min-height: 130px; resize: vertical; }
     let h = topbar(r.groupName, "groups");
     h += `<div class="stack"><div class="row"><span class="grow small muted">${done} of ${r.items.length} done · ${sent} sent</span></div>
       <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${r.items.length}" aria-valuenow="${done}"><div style="width:${(done / r.items.length) * 100}%"></div></div>`;
-    if (cur) {
+    if (cur && auto) {
+      h += `<div class="card stack ask" aria-live="polite"><div class="label">Sent to ${esc(auto.prevName)}</div>
+        <p class="recip">Opening ${esc(cur.name)} in ${auto.secs}…</p>
+        <div class="btnrow"><button class="btn" data-act="auto-pause">Pause</button><button class="btn" data-act="auto-undo">I didn't send to ${esc(firstName(auto.prevName))}</button></div></div>`;
+    } else if (cur) {
       const body = personalize(r.message, cur.name);
       const idx = r.items.indexOf(cur) + 1;
       h += `<div class="card stack ${cur.opened ? "ask" : ""}">
@@ -475,7 +479,7 @@ textarea { min-height: 130px; resize: vertical; }
           <button class="btn" data-act="mark-sent">I sent it, next person</button>`;
       }
       h += `<div class="btnrow"><button class="btn small" data-act="copy-num">Copy number</button><button class="btn small" data-act="copy-msg">Copy message</button><button class="btn small" data-act="skip">Skip</button></div></div>
-        <p class="muted small">Messages opens with the text filled in. Tap send there, then come back here for the next person.</p>`;
+        <p class="muted small">Messages opens with the text filled in. Tap send there, then come back to this app. It marks them sent and opens the next person 3 seconds later.</p>`;
       const left = r.items.filter(i => i.status === "pending").length;
       h += `<details class="card"><summary style="font-weight:600;cursor:pointer">Send all ${left} with the One by One Send Shortcut</summary><div class="stack" style="margin-top:12px">
         <div class="btnrow"><button class="btn primary" data-act="copy-shortcut">1. Copy texts</button><button class="btn" data-act="all-sent">${armedBtn("allsent", "2. Shortcut done, mark sent", "Tap again to confirm")}</button></div>
@@ -552,14 +556,14 @@ textarea { min-height: 130px; resize: vertical; }
   // ---------- events ----------
   document.addEventListener("click", (e) => {
     const tabBtn = e.target.closest(".tabbar button");
-    if (tabBtn) { armed = null; go({ name: tabBtn.dataset.tab }); return; }
+    if (tabBtn) { armed = null; stopCountdown(); go({ name: tabBtn.dataset.tab }); return; }
     const el = e.target.closest("[data-act]");
     if (!el || el.tagName === "SELECT") return;
     const act = el.dataset.act, id = el.dataset.id;
     const prevArmed = armed; armed = null;
     switch (act) {
       case "tab": go({ name: el.dataset.to }); break;
-      case "back":
+      case "back": stopCountdown();
         if (el.dataset.to === "group") go({ name: "group", id: view.id });
         else go({ name: el.dataset.to });
         break;
@@ -597,8 +601,16 @@ textarea { min-height: 130px; resize: vertical; }
       case "resume": go({ name: "run" }); break;
       case "opened": {
         const cur = S.run.items.find(i => i.status === "pending");
+        autoPaused = false; wentHidden = false;
         if (cur) { cur.opened = true; save(); setTimeout(render, 400); }
         return; // let the link open Messages
+      }
+      case "auto-pause": stopCountdown(); autoPaused = true; render(); break;
+      case "auto-undo": {
+        const prevCid = auto && auto.prevCid; stopCountdown(); autoPaused = true;
+        const it = S.run.items.find(i => i.cid === prevCid);
+        if (it) { it.status = "pending"; S.run.items.splice(S.run.items.indexOf(it), 1); const fp = S.run.items.findIndex(i => i.status === "pending"); S.run.items.splice(fp < 0 ? S.run.items.length : fp, 0, it); save(); }
+        render(); break;
       }
       case "mark-sent": case "skip": {
         const cur = S.run.items.find(i => i.status === "pending");
@@ -685,7 +697,40 @@ textarea { min-height: 130px; resize: vertical; }
   });
   document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "newgroup") document.querySelector('[data-act="add-group"]').click(); });
   // Coming back from Messages: show the "did you send it?" prompt
-  document.addEventListener("visibilitychange", () => { if (!document.hidden && view.name === "run") render(); });
+  // Auto-advance: coming back from Messages marks the person sent and opens the next one after 3 seconds
+  let auto = null, autoPaused = false, wentHidden = false, launchTimer = null;
+  function stopCountdown() { if (auto) clearInterval(auto.timer); auto = null; }
+  function startCountdown(prev) {
+    stopCountdown();
+    auto = { secs: 3, prevCid: prev.cid, prevName: prev.name };
+    render();
+    auto.timer = setInterval(() => {
+      if (!auto) return;
+      auto.secs--;
+      if (auto.secs > 0) { render(); return; }
+      stopCountdown();
+      const next = S.run && S.run.items.find(i => i.status === "pending");
+      if (next) launch(next); else render();
+    }, 1000);
+  }
+  function launch(item) {
+    item.opened = true; wentHidden = false; save(); render();
+    try { location.href = smsHref(item.phone, personalize(S.run.message, item.name)); } catch (e) {}
+    clearTimeout(launchTimer);
+    launchTimer = setTimeout(() => {
+      if (!wentHidden && !document.hidden && item.opened) { delete item.opened; save(); render(); toast("Tap Open in Messages to continue"); }
+    }, 2500);
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { wentHidden = true; return; }
+    clearTimeout(launchTimer);
+    if (view.name !== "run" || !S.run) return;
+    const cur = S.run.items.find(i => i.status === "pending");
+    if (cur && cur.opened && !autoPaused) {
+      cur.status = "sent"; delete cur.opened; save();
+      if (S.run.items.some(i => i.status === "pending")) startCountdown(cur); else render();
+    } else render();
+  });
 
   // ---------- boot ----------
   const local = loadLocal();
